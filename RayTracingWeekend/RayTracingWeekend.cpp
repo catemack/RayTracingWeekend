@@ -1,6 +1,3 @@
-// RayTracingWeekend.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
 #include <fstream>
 #include <limits>
@@ -11,6 +8,7 @@
 #include "HitableList.h"
 #include "Camera.h"
 
+// Generates a random float [0.0, 1.0)
 inline float randomFloat() {
 	static std::uniform_real_distribution<float> distribution(0.0, 1.0);
 	static std::mt19937 generator;
@@ -19,10 +17,25 @@ inline float randomFloat() {
 	return randGenerator();
 }
 
+Vec3 randomPointInUnitSphere() {
+	Vec3 p;
+
+	// Sample points inside unit cube until we get one inside the sphere
+	do {
+		p = 2.0 * Vec3(randomFloat(), randomFloat(), randomFloat()) - Vec3(1, 1, 1);
+	} while (p.lengthSquared() >= 1.0);
+
+	return p;
+}
+
+// Consumes a ray and returns a color
+// Color is based on the normal of the first intersection
+// Otherwise, apply a blue-white gradient based on height
 Vec3 color(const Ray& r, Hitable *world) {
 	hitRecord record;
-	if (world->hit(r, 0.0, std::numeric_limits<float>::infinity(), record)) {
-		return 0.5 * Vec3(record.normal.x + 1, record.normal.y + 1, record.normal.z + 1);
+	if (world->hit(r, 0.001, std::numeric_limits<float>::infinity(), record)) {
+		Vec3 target = record.p + record.normal + randomPointInUnitSphere();
+		return 0.5 * color(Ray(record.p, target - record.p), world);
 	}
 	else {
 		Vec3 unitDirection = unitVector(r.direction());
@@ -34,23 +47,30 @@ Vec3 color(const Ray& r, Hitable *world) {
 
 int main()
 {
-	int nx = 200;
-	int ny = 100;
-	int ns = 100;
+	int nx = 200; // image width
+	int ny = 100; // image height
+	int ns = 100; // number of samples for anti-aliasing
+	float gamma = 2.0;
 
+	// Initialize the output file
 	std::ofstream fout("output.ppm");
 
+	// PPM file info (dimensions, color max)
 	fout << "P3\n" << nx << " " << ny << "\n255\n";
 
+	// Initialize some spheres
 	std::vector<std::unique_ptr<Hitable>> list;
 	list.push_back(std::make_unique<Sphere>(Vec3(0, 0, -1), 0.5));
 	list.push_back(std::make_unique<Sphere>(Vec3(0, -100.5, -1), 100));
 
+	// Initialize the world and camera
 	Hitable* world = new HitableList(std::move(list));
 	Camera camera;
 
+	// For each pixel
 	for (int j = ny - 1; j >= 0; j--) {
 		for (int i = 0; i < nx; i++) {
+			// Take ns samples for anti-aliasing
 			Vec3 col(0, 0, 0);
 			for (int s = 0; s < ns; s++) {
 				float u = (float(i) + randomFloat()) / float(nx);
@@ -61,6 +81,9 @@ int main()
 			}
 			col /= float(ns);
 
+			// Gamma correction
+			col = Vec3(powf(col.x, 1.0 / gamma), powf(col.y, 1.0 / gamma), powf(col.z, 1.0 / gamma));
+
 			int ir = int(255.99 * col.x);
 			int ig = int(255.99 * col.y);
 			int ib = int(255.99 * col.z);
@@ -69,16 +92,6 @@ int main()
 		}
 	}
 
+	// Close file stream
 	fout.close();
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
