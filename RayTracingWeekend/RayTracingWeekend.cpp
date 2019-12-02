@@ -6,7 +6,21 @@
 
 #include "ray.h"
 
+bool hitSphere(const Vec3& center, float radius, const Ray& r) {
+	Vec3 originCircle = r.origin() - center;
+
+	float a = dot(r.direction(), r.direction());
+	float b = 2.0 * dot(originCircle, r.direction());
+	float c = dot(originCircle, originCircle) - radius * radius;
+
+	float discriminant = b * b - 4 * a * c;
+	return (discriminant > 0);
+}
+
 Vec3 color(const Ray& r) {
+	if (hitSphere(Vec3(0, 0, -1), 0.5, r))
+		return Vec3(1, 0, 0);
+
 	Vec3 unitDirection = unitVector(r.direction());
 	float t = 0.5 * (unitDirection.y + 1.0);
 
