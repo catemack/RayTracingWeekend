@@ -9,8 +9,8 @@ class Vec3
 public:
 	Vec3(float x, float y, float z);
 
-	inline const Vec3& operator+() const;
-	inline Vec3 operator-() const;
+	inline const Vec3& operator+() const { return *this; }
+	inline Vec3 operator-() const { return Vec3(-x, -y, -z); }
 	
 	inline Vec3& operator+=(const Vec3 &other);
 	inline Vec3& operator-=(const Vec3 &other);
@@ -19,8 +19,8 @@ public:
 	inline Vec3& operator*=(const float t);
 	inline Vec3& operator/=(const float t);
 
-	inline float length() const;
-	inline float lengthSquared() const;
+	inline float length() const { return sqrt(x * x + y * y + z * z); }
+	inline float lengthSquared() const { return x * x + y * y + z * z; }
 	inline void makeUnit();
 
 	float x, y, z;

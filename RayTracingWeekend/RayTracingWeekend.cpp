@@ -4,7 +4,14 @@
 #include <iostream>
 #include <fstream>
 
-#include "vec3.h"
+#include "ray.h"
+
+Vec3 color(const Ray& r) {
+	Vec3 unitDirection = unitVector(r.direction());
+	float t = 0.5 * (unitDirection.y + 1.0);
+
+	return (1.0 - t) * Vec3(1.0, 1.0, 1.0) + t * Vec3(0.5, 0.7, 1.0);
+}
 
 int main()
 {
@@ -15,9 +22,20 @@ int main()
 
 	fout << "P3\n" << nx << " " << ny << "\n255\n";
 
+	Vec3 lowerLeft(-2.0, -1.0, -1.0);
+	Vec3 horizontal(4.0, 0.0, 0.0);
+	Vec3 vertical(0.0, 2.0, 0.0);
+	Vec3 origin(0.0, 0.0, 0.0);
+
 	for (int j = ny - 1; j >= 0; j--) {
 		for (int i = 0; i < nx; i++) {
-			Vec3 col(float(i) / float(nx), float(j) / float(ny), 0.2);
+			//Vec3 col(float(i) / float(nx), float(j) / float(ny), 0.2);
+
+			float u = float(i) / float(nx);
+			float v = float(j) / float(ny);
+
+			Ray r(origin, lowerLeft + u * horizontal + v * vertical);
+			Vec3 col = color(r);
 
 			int ir = int(255.99 * col.x);
 			int ig = int(255.99 * col.y);
