@@ -35,18 +35,11 @@ int main()
 	Vec3 vertical(0.0, 2.0, 0.0);
 	Vec3 origin(0.0, 0.0, 0.0);
 
-	/*std::vector<std::unique_ptr<Hitable>> list;
-	auto sphere = std::make_unique<Sphere>(Vec3(0, 0, -1), 0.5);
-	list.push_back(std::move(sphere));
-	sphere = std::make_unique<Sphere>(Vec3(0, -100.5, -1), 100);
-	list.push_back(std::move(sphere));
+	std::vector<std::unique_ptr<Hitable>> list;
+	list.push_back(std::make_unique<Sphere>(Vec3(0, 0, -1), 0.5));
+	list.push_back(std::make_unique<Sphere>(Vec3(0, -100.5, -1), 100));
 
-	Hitable *world = new HitableList(list);*/
-
-	Hitable* list[2];
-	list[0] = new Sphere(Vec3(0, 0, -1), 0.5);
-	list[1] = new Sphere(Vec3(0, -100.5, -1), 100);
-	Hitable* world = new HitableList(list, 2);
+	Hitable* world = new HitableList(std::move(list));
 
 	for (int j = ny - 1; j >= 0; j--) {
 		for (int i = 0; i < nx; i++) {
