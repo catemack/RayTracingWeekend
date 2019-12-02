@@ -7,6 +7,7 @@
 class Vec3
 {
 public:
+	Vec3() {};
 	Vec3(float x, float y, float z);
 
 	inline const Vec3& operator+() const { return *this; }
