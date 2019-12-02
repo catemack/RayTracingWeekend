@@ -8,7 +8,7 @@ class Vec3
 {
 public:
 	Vec3() {};
-	Vec3(float x, float y, float z);
+	Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
 
 	inline const Vec3& operator+() const { return *this; }
 	inline Vec3 operator-() const { return Vec3(-x, -y, -z); }
@@ -77,4 +77,53 @@ inline Vec3 cross(const Vec3& v1, const Vec3& v2) {
 
 inline Vec3 unitVector(Vec3 v) {
 	return v / v.length();
+}
+
+inline Vec3& Vec3::operator+=(const Vec3& other) {
+	x += other.x;
+	y += other.y;
+	z += other.z;
+	return *this;
+}
+
+inline Vec3& Vec3::operator-=(const Vec3& other) {
+	x -= other.x;
+	y -= other.y;
+	z -= other.z;
+	return *this;
+}
+
+inline Vec3& Vec3::operator*=(const Vec3& other) {
+	x *= other.x;
+	y *= other.y;
+	z *= other.z;
+	return *this;
+}
+
+inline Vec3& Vec3::operator/=(const Vec3& other) {
+	x /= other.x;
+	y /= other.y;
+	z /= other.z;
+	return *this;
+}
+
+inline Vec3& Vec3::operator*=(const float t) {
+	x *= t;
+	y *= t;
+	z *= t;
+	return *this;
+}
+
+inline Vec3& Vec3::operator/=(const float t) {
+	x /= t;
+	y /= t;
+	z /= t;
+	return *this;
+}
+
+inline void Vec3::makeUnit() {
+	float length = this->length();
+	x /= length;
+	y /= length;
+	z /= length;
 }

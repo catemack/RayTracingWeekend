@@ -4,9 +4,20 @@
 #include <iostream>
 #include <fstream>
 #include <limits>
+#include <functional>
+#include <random>
 
 #include "Sphere.h"
 #include "HitableList.h"
+#include "Camera.h"
+
+inline float randomFloat() {
+	static std::uniform_real_distribution<float> distribution(0.0, 1.0);
+	static std::mt19937 generator;
+	static std::function<float()> randGenerator =
+		std::bind(distribution, generator);
+	return randGenerator();
+}
 
 Vec3 color(const Ray& r, Hitable *world) {
 	hitRecord record;
@@ -25,29 +36,30 @@ int main()
 {
 	int nx = 200;
 	int ny = 100;
+	int ns = 100;
 
 	std::ofstream fout("output.ppm");
 
 	fout << "P3\n" << nx << " " << ny << "\n255\n";
-
-	Vec3 lowerLeft(-2.0, -1.0, -1.0);
-	Vec3 horizontal(4.0, 0.0, 0.0);
-	Vec3 vertical(0.0, 2.0, 0.0);
-	Vec3 origin(0.0, 0.0, 0.0);
 
 	std::vector<std::unique_ptr<Hitable>> list;
 	list.push_back(std::make_unique<Sphere>(Vec3(0, 0, -1), 0.5));
 	list.push_back(std::make_unique<Sphere>(Vec3(0, -100.5, -1), 100));
 
 	Hitable* world = new HitableList(std::move(list));
+	Camera camera;
 
 	for (int j = ny - 1; j >= 0; j--) {
 		for (int i = 0; i < nx; i++) {
-			float u = float(i) / float(nx);
-			float v = float(j) / float(ny);
+			Vec3 col(0, 0, 0);
+			for (int s = 0; s < ns; s++) {
+				float u = (float(i) + randomFloat()) / float(nx);
+				float v = (float(j) + randomFloat()) / float(ny);
 
-			Ray r(origin, lowerLeft + u * horizontal + v * vertical);
-			Vec3 col = color(r, world);
+				Ray r = camera.getRay(u, v);
+				col += color(r, world);
+			}
+			col /= float(ns);
 
 			int ir = int(255.99 * col.x);
 			int ig = int(255.99 * col.y);
