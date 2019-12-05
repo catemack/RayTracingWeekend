@@ -32,11 +32,44 @@ Vec3 color(const Ray& r, Hitable *world, int depth) {
 	}
 }
 
+Hitable* randomScene() {
+	std::vector<std::unique_ptr<Hitable>> out;
+
+	out.push_back(std::make_unique<Sphere>(Vec3(0, -1000, -1), 1000, std::make_shared<Lambertian>(Vec3(0.5, 0.5, 0.5))));
+
+	for (int i = -10; i <= 10; i++) {
+		for (int j = -10; j <= 10; j++) {
+			Vec3 pos(i + 0.9 * randomFloat(), 0.2, j + 0.9 * randomFloat());
+			float size = randomFloat() / 4.0;
+			float randMaterial = randomFloat();
+			if (randMaterial < 0.8) {
+				out.push_back(std::make_unique<Sphere>(pos, size, std::make_shared<Lambertian>(Vec3(
+					randomFloat() * randomFloat(),
+					randomFloat() * randomFloat(),
+					randomFloat() * randomFloat()))));
+			}
+			else if (randMaterial < 0.95) {
+				out.push_back(std::make_unique<Sphere>(pos, size, std::make_shared<Metal>(Vec3(
+					0.5 * (1.0 + randomFloat()), 0.5 * (1.0 + randomFloat()), 0.5 * (1.0 + randomFloat())))));
+			}
+			else {
+				out.push_back(std::make_unique<Sphere>(pos, size, std::make_shared<Dielectric>(1.5)));
+			}
+		}
+	}
+
+	out.push_back(std::make_unique<Sphere>(Vec3(0, 1, 0), 1.0, std::make_shared<Lambertian>(Vec3(0.8, 0.3, 0.3))));
+	out.push_back(std::make_unique<Sphere>(Vec3(-4, 1, 0), 1.0, std::make_shared<Metal>(Vec3(0.7, 0.6, 0.5))));
+	out.push_back(std::make_unique<Sphere>(Vec3(4, 1, 0), 1.0, std::make_shared<Dielectric>(1.5)));
+
+	return new HitableList(std::move(out));
+}
+
 int main()
 {
 	int nx = 400; // image width
 	int ny = 200; // image height
-	int ns = 50; // number of samples for anti-aliasing
+	int ns = 10; // number of samples for anti-aliasing
 	float gamma = 2.0;
 
 	// Initialize the output file
@@ -45,16 +78,15 @@ int main()
 	// PPM file info (dimensions, color max)
 	fout << "P3\n" << nx << " " << ny << "\n255\n";
 
-	// Initialize some spheres
-	std::vector<std::unique_ptr<Hitable>> list;
-	list.push_back(std::make_unique<Sphere>(Vec3(0, 0, -1), 0.5, std::make_shared<Lambertian>(Vec3(0.8, 0.3, 0.3))));
-	list.push_back(std::make_unique<Sphere>(Vec3(0, -100.5, -1), 100, std::make_shared<Lambertian>(Vec3(0.8, 0.8, 0.0))));
-	list.push_back(std::make_unique<Sphere>(Vec3(1, 0, -1), 0.5, std::make_shared<Metal>(Vec3(0.8, 0.6, 0.2))));
-	list.push_back(std::make_unique<Sphere>(Vec3(-1, 0, -1), 0.5, std::make_shared<Dielectric>(1.5)));
-
 	// Initialize the world and camera
-	Hitable* world = new HitableList(std::move(list));
-	Camera camera(Vec3(-2, 2, 1), Vec3(0, 0, -1), Vec3(0, 1, 0), 45, float(nx) / float(ny));
+	Hitable* world = randomScene();
+
+	Vec3 lookFrom(13, 5, 3);
+	Vec3 lookAt(0, 0, 0);
+	float distToFocus = 1.0;
+	float aperture = 0.002;
+
+	Camera camera(lookFrom, lookAt, Vec3(0, 1, 0), 20, float(nx) / float(ny), aperture, distToFocus);
 
 	// For each pixel
 	for (int j = ny - 1; j >= 0; j--) {

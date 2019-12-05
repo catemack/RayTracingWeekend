@@ -31,6 +31,16 @@ static Vec3 randomPointInUnitSphere() {
 	return p;
 }
 
+static Vec3 randomPointInUnitDisk() {
+	Vec3 p;
+
+	do {
+		p = 2.0 * Vec3(randomFloat(), randomFloat(), 0) - Vec3(1, 1, 0);
+	} while (dot(p, p) >= 1.0);
+
+	return p;
+}
+
 static Vec3 reflect(const Vec3& v, const Vec3& n) {
 	return v - 2 * dot(v, n) * n;
 }
@@ -38,7 +48,7 @@ static Vec3 reflect(const Vec3& v, const Vec3& n) {
 static bool refract(const Vec3& v, const Vec3& n, float ni_over_nt, Vec3& refracted) {
 	Vec3 uv = unitVector(v);
 	float dt = dot(uv, n);
-	float discriminant = 1.0 - ni_over_nt * ni_over_nt * (1 - dt * dt);
+	float discriminant = 1.0 - ni_over_nt * ni_over_nt * (1.0 - dt * dt);
 
 	if (discriminant > 0) {
 		refracted = ni_over_nt * (uv - n * dt) - n * sqrt(discriminant);
