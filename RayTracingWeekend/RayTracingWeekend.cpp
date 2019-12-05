@@ -34,8 +34,8 @@ Vec3 color(const Ray& r, Hitable *world, int depth) {
 
 int main()
 {
-	int nx = 200; // image width
-	int ny = 100; // image height
+	int nx = 400; // image width
+	int ny = 200; // image height
 	int ns = 50; // number of samples for anti-aliasing
 	float gamma = 2.0;
 
@@ -54,7 +54,7 @@ int main()
 
 	// Initialize the world and camera
 	Hitable* world = new HitableList(std::move(list));
-	Camera camera;
+	Camera camera(Vec3(-2, 2, 1), Vec3(0, 0, -1), Vec3(0, 1, 0), 45, float(nx) / float(ny));
 
 	// For each pixel
 	for (int j = ny - 1; j >= 0; j--) {

@@ -9,6 +9,8 @@
 
 #include "Vec3.h"
 
+const float PI = 3.1415927;
+
 // Generates a random float [0.0, 1.0)
 static inline float randomFloat() {
 	static std::uniform_real_distribution<float> distribution(0.0, 1.0);

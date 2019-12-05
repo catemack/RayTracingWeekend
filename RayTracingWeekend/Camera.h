@@ -1,11 +1,12 @@
 #pragma once
 
+#include "Common.h"
 #include "Ray.h"
 
 class Camera
 {
 public:
-	Camera();
+	Camera(Vec3 lookFrom, Vec3 lookAt, Vec3 up, float vfov, float aspect);
 
 	Ray getRay(float u, float v);
 
