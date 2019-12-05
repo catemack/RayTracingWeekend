@@ -152,15 +152,24 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Dielectric.cpp" />
     <ClCompile Include="HitableList.cpp" />
+    <ClCompile Include="Lambertian.cpp" />
+    <ClCompile Include="Metal.cpp" />
     <ClCompile Include="Ray.cpp" />
     <ClCompile Include="RayTracingWeekend.cpp" />
     <ClCompile Include="Sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="Dielectric.h" />
     <ClInclude Include="Hitable.h" />
     <ClInclude Include="HitableList.h" />
+    <ClInclude Include="HitRecord.h" />
+    <ClInclude Include="Lambertian.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Metal.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="Vec3.h" />

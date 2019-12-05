@@ -1,41 +1,28 @@
-#include <iostream>
-#include <fstream>
-#include <limits>
-#include <functional>
-#include <random>
-
+#include "Common.h"
 #include "Sphere.h"
+#include "Lambertian.h"
+#include "Metal.h"
+#include "Dielectric.h"
 #include "HitableList.h"
 #include "Camera.h"
 
-// Generates a random float [0.0, 1.0)
-inline float randomFloat() {
-	static std::uniform_real_distribution<float> distribution(0.0, 1.0);
-	static std::mt19937 generator;
-	static std::function<float()> randGenerator =
-		std::bind(distribution, generator);
-	return randGenerator();
-}
-
-Vec3 randomPointInUnitSphere() {
-	Vec3 p;
-
-	// Sample points inside unit cube until we get one inside the sphere
-	do {
-		p = 2.0 * Vec3(randomFloat(), randomFloat(), randomFloat()) - Vec3(1, 1, 1);
-	} while (p.lengthSquared() >= 1.0);
-
-	return p;
-}
+const int maxDepth = 50;
 
 // Consumes a ray and returns a color
 // Color is based on the normal of the first intersection
 // Otherwise, apply a blue-white gradient based on height
-Vec3 color(const Ray& r, Hitable *world) {
-	hitRecord record;
+Vec3 color(const Ray& r, Hitable *world, int depth) {
+	HitRecord record;
 	if (world->hit(r, 0.001, std::numeric_limits<float>::infinity(), record)) {
+		Ray scattered;
+		Vec3 attenuation;
+
+		if (depth < maxDepth && record.material->scatter(r, record, attenuation, scattered)) {
+			return attenuation * color(scattered, world, depth + 1);
+		}
+
 		Vec3 target = record.p + record.normal + randomPointInUnitSphere();
-		return 0.5 * color(Ray(record.p, target - record.p), world);
+		return 0.5 * color(Ray(record.p, target - record.p), world, depth + 1);
 	}
 	else {
 		Vec3 unitDirection = unitVector(r.direction());
@@ -49,7 +36,7 @@ int main()
 {
 	int nx = 200; // image width
 	int ny = 100; // image height
-	int ns = 100; // number of samples for anti-aliasing
+	int ns = 50; // number of samples for anti-aliasing
 	float gamma = 2.0;
 
 	// Initialize the output file
@@ -60,8 +47,10 @@ int main()
 
 	// Initialize some spheres
 	std::vector<std::unique_ptr<Hitable>> list;
-	list.push_back(std::make_unique<Sphere>(Vec3(0, 0, -1), 0.5));
-	list.push_back(std::make_unique<Sphere>(Vec3(0, -100.5, -1), 100));
+	list.push_back(std::make_unique<Sphere>(Vec3(0, 0, -1), 0.5, std::make_shared<Lambertian>(Vec3(0.8, 0.3, 0.3))));
+	list.push_back(std::make_unique<Sphere>(Vec3(0, -100.5, -1), 100, std::make_shared<Lambertian>(Vec3(0.8, 0.8, 0.0))));
+	list.push_back(std::make_unique<Sphere>(Vec3(1, 0, -1), 0.5, std::make_shared<Metal>(Vec3(0.8, 0.6, 0.2))));
+	list.push_back(std::make_unique<Sphere>(Vec3(-1, 0, -1), 0.5, std::make_shared<Dielectric>(1.5)));
 
 	// Initialize the world and camera
 	Hitable* world = new HitableList(std::move(list));
@@ -77,7 +66,7 @@ int main()
 				float v = (float(j) + randomFloat()) / float(ny);
 
 				Ray r = camera.getRay(u, v);
-				col += color(r, world);
+				col += color(r, world, 0);
 			}
 			col /= float(ns);
 

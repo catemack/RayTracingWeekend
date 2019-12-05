@@ -1,9 +1,11 @@
 #pragma once
+
 #include "Vec3.h"
 
 class Ray
 {
 public:
+	Ray() {}
 	Ray(const Vec3& a, const Vec3& b);
 
 	Vec3 origin() const;

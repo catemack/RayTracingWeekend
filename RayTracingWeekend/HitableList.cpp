@@ -1,7 +1,7 @@
 #include "HitableList.h"
 
-bool HitableList::hit(const Ray& r, float tMin, float tMax, hitRecord& record) const {
-	hitRecord tempRecord;
+bool HitableList::hit(const Ray& r, float tMin, float tMax, HitRecord& record) const {
+	HitRecord tempRecord;
 	bool hitAnything = false;
 	double closest = tMax;
 
