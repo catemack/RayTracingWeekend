@@ -6,6 +6,8 @@
 #include <random>
 #include <memory>
 #include <vector>
+#include <array>
+#include <thread>
 
 #include "Vec3.h"
 

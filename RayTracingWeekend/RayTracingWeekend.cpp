@@ -11,7 +11,7 @@ const int maxDepth = 50;
 // Consumes a ray and returns a color
 // Color is based on the normal of the first intersection
 // Otherwise, apply a blue-white gradient based on height
-Vec3 color(const Ray& r, Hitable *world, int depth) {
+Vec3 color(const Ray& r, const Hitable *world, int depth) {
 	HitRecord record;
 	if (world->hit(r, 0.001, std::numeric_limits<float>::infinity(), record)) {
 		Ray scattered;
@@ -65,31 +65,8 @@ Hitable* randomScene() {
 	return new HitableList(std::move(out));
 }
 
-int main()
-{
-	int nx = 400; // image width
-	int ny = 200; // image height
-	int ns = 10; // number of samples for anti-aliasing
-	float gamma = 2.0;
-
-	// Initialize the output file
-	std::ofstream fout("output.ppm");
-
-	// PPM file info (dimensions, color max)
-	fout << "P3\n" << nx << " " << ny << "\n255\n";
-
-	// Initialize the world and camera
-	Hitable* world = randomScene();
-
-	Vec3 lookFrom(13, 5, 3);
-	Vec3 lookAt(0, 0, 0);
-	float distToFocus = 1.0;
-	float aperture = 0.002;
-
-	Camera camera(lookFrom, lookAt, Vec3(0, 1, 0), 20, float(nx) / float(ny), aperture, distToFocus);
-
-	// For each pixel
-	for (int j = ny - 1; j >= 0; j--) {
+void render(const int nx, const int ny, const int ns, const float gamma, const Camera& camera, const Hitable* world, std::shared_ptr<std::vector<std::vector<Vec3>>> result) {
+	for (int j = 0; j < ny; j++) {
 		for (int i = 0; i < nx; i++) {
 			// Take ns samples for anti-aliasing
 			Vec3 col(0, 0, 0);
@@ -109,7 +86,75 @@ int main()
 			int ig = int(255.99 * col.y);
 			int ib = int(255.99 * col.z);
 
-			fout << ir << " " << ig << " " << ib << std::endl;
+			(*result)[ny-j-1][i] = Vec3(ir, ig, ib);
+		}
+	}
+}
+
+int main()
+{
+	int nx = 400; // image width
+	int ny = 200; // image height
+	int ns = 10; // number of samples for anti-aliasing
+	float gamma = 2.0;
+	const int numThreads = 2;
+
+	// Initialize the world and camera
+	Hitable* world = randomScene();
+
+	Vec3 lookFrom(13, 5, 3);
+	Vec3 lookAt(0, 0, 0);
+	float distToFocus = 1.0;
+	float aperture = 0.002;
+
+	Camera camera(lookFrom, lookAt, Vec3(0, 1, 0), 20, float(nx) / float(ny), aperture, distToFocus);
+
+	// Spin up the threads
+	std::vector<std::shared_ptr<std::vector<std::vector<Vec3>>>> results;
+	std::vector<std::thread> threads;
+	for (int i = 0; i < numThreads; i++) {
+		// Set up the result container for the thread
+		std::vector<std::vector<Vec3>> result(ny, std::vector<Vec3>(nx));
+		auto resultPtr = std::make_shared<std::vector<std::vector<Vec3>>>(result);
+		results.push_back(resultPtr);
+
+		// Spin up the thread
+		threads.push_back(std::thread(render, nx, ny, ns, gamma, camera, world, resultPtr));
+	}
+
+	// Wait for the threads
+	for (std::thread& t : threads) {
+		if (t.joinable())
+			t.join();
+	}
+
+	// Average the results
+	std::vector<std::vector<Vec3>> finalResult(ny, std::vector<Vec3>(nx));
+	for (int j = 0; j < ny; j++) {
+		std::vector<Vec3> result;
+
+		for (int i = 0; i < nx; i++) {
+			Vec3 pixel(0.0, 0.0, 0.0);
+
+			for (int k = 0; k < numThreads; k++)
+				pixel += (*(results[k]))[ny-j-1][i];
+
+			pixel /= numThreads;
+			result.push_back(pixel);
+		}
+
+		finalResult.at(ny-j-1) = result;
+	}
+
+	// Initialize the output file
+	std::ofstream fout("output.ppm");
+
+	// PPM file info (dimensions, color max)
+	fout << "P3\n" << nx << " " << ny << "\n255\n";
+
+	for (auto col : finalResult) {
+		for (auto pixel : col) {
+			fout << pixel.x << " " << pixel.y << " " << pixel.z << std::endl;
 		}
 	}
 

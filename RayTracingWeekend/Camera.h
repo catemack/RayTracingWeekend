@@ -8,7 +8,7 @@ class Camera
 public:
 	Camera(Vec3 lookFrom, Vec3 lookAt, Vec3 up, float vfov, float aspect, float aperture, float focusDist);
 
-	Ray getRay(float u, float v);
+	Ray getRay(float u, float v) const;
 
 private:
 	Vec3 origin;

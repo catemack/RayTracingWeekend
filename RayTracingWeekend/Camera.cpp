@@ -18,7 +18,7 @@ Camera::Camera(Vec3 lookFrom, Vec3 lookAt, Vec3 up, float vfov, float aspect, fl
 	vertical = 2 * halfHeight * v;
 }
 
-Ray Camera::getRay(float s, float t) {
+Ray Camera::getRay(float s, float t) const {
 	Vec3 randomOnDisk = lensRadius * randomPointInUnitDisk();
 	Vec3 offset = u * randomOnDisk.x + v * randomOnDisk.y;
 	return Ray(origin + offset, lowerLeft + s * horizontal + t * vertical - origin - offset);
